@@ -3,9 +3,11 @@ require 'sinatra'
 require 'twilio-ruby'
 require 'json'
 
-def find_on_call_number
-  feed = 'https://www.google.com/calendar/ical/hubbub.co.uk_0figeu9ktc7v6vsl4rc2ggg7bs%40group.calendar.google.com/public/basic.ics'
-  data = %x{curl -s #{feed}}
+FEED_MAP = JSON.parse(ENV["FEED_MAP"])
+puts "Loaded feed map: #{FEED_MAP.inspect}"
+
+def find_on_call_number(number)
+  data = %x{curl -s #{FEED_MAP[number]}}
 
   cal = Icalendar.parse(data)
   event = cal.first.events.select { |e|
@@ -16,8 +18,9 @@ def find_on_call_number
 end
 
 post '/voice' do
-  target = find_on_call_number
-  puts "Call received from #{params[:From]}. Forwarding to #{target}."
+  puts "Call received from #{params[:From]} to #{params[:To]}"
+  target = find_on_call_number(params[:To])
+  puts "Target found: #{target}"
 
   response = Twilio::TwiML::Response.new do |r|
     r.Say "Your call is being redirected"
@@ -30,8 +33,9 @@ post '/voice' do
 end
 
 post '/sms' do
-  target = find_on_call_number
-  puts "SMS received from #{params[:From]}. Forwarding to #{target}."
+  puts "SMS received from #{params[:From]} to #{params[:To]}"
+  target = find_on_call_number(params[:To])
+  puts "Target found: #{target}"
 
   response = Twilio::TwiML::Response.new do |r|
     r.Message(to: target, from: params[:To]) do |m|
