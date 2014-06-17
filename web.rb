@@ -1,9 +1,22 @@
+require 'icalendar'
 require 'sinatra'
 require 'twilio-ruby'
 require 'json'
 
+def find_on_call_number
+  feed = 'https://www.google.com/calendar/ical/hubbub.co.uk_0figeu9ktc7v6vsl4rc2ggg7bs%40group.calendar.google.com/public/basic.ics'
+  data = %x{curl -s #{feed}}
+
+  cal = Icalendar.parse(data)
+  event = cal.first.events.select { |e|
+    Date.today >= e.dtstart.value && Date.today < e.dtend.value
+  }.first
+
+  event.location
+end
+
 post '/voice' do
-  target = "+447429498279"
+  target = find_on_call_number
   puts "Call received from #{params[:From]}. Forwarding to #{target}."
 
   response = Twilio::TwiML::Response.new do |r|
@@ -17,7 +30,7 @@ post '/voice' do
 end
 
 post '/sms' do
-  target = "+447429498279"
+  target = find_on_call_number
   puts "SMS received from #{params[:From]}. Forwarding to #{target}."
 
   response = Twilio::TwiML::Response.new do |r|

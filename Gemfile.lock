@@ -2,6 +2,7 @@ GEM
   remote: https://rubygems.org/
   specs:
     builder (3.2.2)
+    icalendar (2.0.1)
     json (1.8.1)
     jwt (1.0.0)
     multi_json (1.10.1)
@@ -22,6 +23,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  icalendar
   json
   sinatra
   twilio-ruby
