@@ -17,31 +17,31 @@ def find_on_call_number(number)
   event.location
 end
 
-post '/voice' do
-  puts "Call received from #{params[:From]} to #{params[:To]}"
+def twiml_response(params, type)
+  puts "#{type} received from #{params[:From]} to #{params[:To]}"
   target = find_on_call_number(params[:To])
   puts "Target found: #{target}"
 
   response = Twilio::TwiML::Response.new do |r|
-    r.Say "Your call is being redirected"
-    r.Dial do |d|
-      d.Number target
-    end
+    yield r, target
   end
 
   response.text
 end
 
-post '/sms' do
-  puts "SMS received from #{params[:From]} to #{params[:To]}"
-  target = find_on_call_number(params[:To])
-  puts "Target found: #{target}"
+post '/voice' do
+  twiml_response(params, "Call") do |r, target|
+    r.Say "Your call is being redirected"
+    r.Dial do |d|
+      d.Number target
+    end
+  end
+end
 
-  response = Twilio::TwiML::Response.new do |r|
+post '/sms' do
+  twiml_response(params, "SMS") do |r, target|
     r.Message(to: target, from: params[:To]) do |m|
       m.Body params[:Body]
     end
   end
-
-  response.text
 end
