@@ -4,6 +4,7 @@ require 'twilio-ruby'
 require 'json'
 
 FEED_MAP = JSON.parse(ENV["FEED_MAP"])
+FALLBACK = ENV["FALLBACK_NUMBER"]
 puts "Loaded feed map: #{FEED_MAP.inspect}"
 
 def find_on_call_number(number)
@@ -14,7 +15,12 @@ def find_on_call_number(number)
     Date.today >= e.dtstart.value && Date.today < e.dtend.value
   }.first
 
-  event.location
+  if event
+    event.location
+  else
+    puts "WARNING: No number found, using fallback"
+    FALLBACK
+  end
 end
 
 def twiml_response(params, type)
